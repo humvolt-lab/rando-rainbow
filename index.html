@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Rando Rainbow</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
+    body {
+      background: #111827;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overscroll-behavior: none;
+      width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1rem;
+      padding-top: 2rem;
+    }
+
+    .app-wrapper {
+      width: 100%;
+      max-width: 28rem;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+
+    .pad-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pad {
+      aspect-ratio: 1;
+      border-radius: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      touch-action: none;
+      transition: all 0.1s;
+    }
+
+    .pad:active {
+      transform: scale(0.95);
+    }
+
+    .pad.pulsing {
+      filter: brightness(1.5);
+      transform: scale(0.95);
+    }
+
+    .pad.drag-over {
+      box-shadow: 0 0 0 4px white;
+    }
+
+    .drag-line {
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .drag-line line {
+      stroke: rgba(255, 255, 255, 0.8);
+      stroke-width: 4;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+    }
+
+    .pad-label {
+      font-weight: bold;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .level-dots {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .dot.active {
+      background: white;
+    }
+
+    .feedback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      animation: fadeOut 1.5s ease-out forwards;
+    }
+
+    .feedback-text {
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .controls {
+      background: #1f2937;
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .controls-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-text {
+      font-size: 0.875rem;
+    }
+
+    .play-btn {
+      padding: 0.5rem 1.5rem;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .play-btn:active {
+      background: #059669;
+    }
+
+    .play-btn.playing {
+      background: #eab308;
+    }
+
+    .play-btn.playing:active {
+      background: #ca8a04;
+    }
+
+    .hint {
+      margin-top: 1rem;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.75rem;
+    }
+
+    .start-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .start-btn {
+      padding: 1.5rem 3rem;
+      background: linear-gradient(to right, #a855f7, #ec4899);
+      color: white;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 1rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .start-btn:active {
+      transform: scale(1.05);
+    }
+
+    .grad-1 { background: linear-gradient(to bottom right, #ef4444, #f97316); }
+    .grad-2 { background: linear-gradient(to bottom right, #f97316, #eab308); }
+    .grad-3 { background: linear-gradient(to bottom right, #eab308, #22c55e); }
+    .grad-4 { background: linear-gradient(to bottom right, #22c55e, #06b6d4); }
+    .grad-5 { background: linear-gradient(to bottom right, #06b6d4, #3b82f6); }
+    .grad-6 { background: linear-gradient(to bottom right, #3b82f6, #a855f7); }
+    .grad-7 { background: linear-gradient(to bottom right, #a855f7, #ec4899); }
+    .grad-8 { background: linear-gradient(to bottom right, #ec4899, #ef4444); }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    let audioContext = null;
+    let samples = {};
+    let isAudioInitialized = false;
+    let masterCompressor = null;
+    
+    let tempo = 120;
+    let steps = 16;
+    let currentStep = 0;
+    let isPlaying = false;
+    let sequencerInterval = null;
+    
+    let padLevels = {
+      kick: 1, snare: 1, hat: 1, tom: 1,
+      tempoMinus: 1, tempoPlus: 1, stepsMinus: 1, stepsPlus: 1
+    };
+    
+    let patterns = {
+      kick: Array(32).fill(0),
+      snare: Array(32).fill(0),
+      hat: Array(32).fill(0),
+      tom: Array(32).fill(0)
+    };
+    
+    let currentSamples = {
+      kick: 0, snare: 0, hat: 0, tom: 0
+    };
+    
+    let effects = {
+      distortion: false,
+      delay: false,
+      perDrumEffects: {
+        kick: null,
+        snare: null,
+        hat: null,
+        tom: null
+      },
+      perDrumParams: {
+        kick: {},
+        snare: {},
+        hat: {},
+        tom: {}
+      }
+    };
+    
+    let globalDecayMode = 'normal'; // 'normal', 'minimal', 'ambient'
+    let harmonized = false;
+    let swingAmount = 0; // 0 = no swing, 0.5 = max swing
+    
+    let bassEnabled = false;
+    let bassArpeggio = false;
+    let bassPattern = Array(32).fill(0);
+    let bassNotes = Array(32).fill(0);
+    
+    let dragStart = null;
+    let dragStartPos = null;
+    let currentDragOver = null;
+    let dragTouchCount = 0;
+    let dragLineEl = null;
+    
+    const pads = [
+      { id: 'kick', label: 'KICK', grad: 'grad-1' },
+      { id: 'snare', label: 'SNARE', grad: 'grad-2' },
+      { id: 'hat', label: 'HAT', grad: 'grad-3' },
+      { id: 'tom', label: 'TOM', grad: 'grad-4' },
+      { id: 'tempoMinus', label: 'TEMPO -', grad: 'grad-5' },
+      { id: 'tempoPlus', label: 'TEMPO +', grad: 'grad-6' },
+      { id: 'stepsMinus', label: 'STEPS -', grad: 'grad-7' },
+      { id: 'stepsPlus', label: 'STEPS +', grad: 'grad-8' }
+    ];
+
+    function initAudio() {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create master compressor for output normalization
+        masterCompressor = audioContext.createDynamicsCompressor();
+        masterCompressor.threshold.value = -24; // Start compressing at -24dB
+        masterCompressor.knee.value = 30; // Smooth compression curve
+        masterCompressor.ratio.value = 12; // Heavy compression/limiting
+        masterCompressor.attack.value = 0.003; // Fast attack (3ms)
+        masterCompressor.release.value = 0.25; // Quick release (250ms)
+        masterCompressor.connect(audioContext.destination);
+        
+        generateAllSamples();
+        isAudioInitialized = true;
+        
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        
+        isPlaying = true;
+        startSequencer();
+        
+        render();
+      } catch (err) {
+        alert('Audio error: ' + err.message);
+      }
+    }
+
+    function generate808Kick(variant, ctx) {
+      const sampleRate = ctx.sampleRate;
+      let duration, freq, decay;
+      
+      if (variant < 5) {
+        duration = 1.5 + (variant * 0.5);
+        freq = 45 + (variant * 3);
+        decay = 3 + (variant * 0.5);
+      } else {
+        duration = 0.4 + ((variant - 5) * 0.05);
+        freq = 55 + ((variant - 5) * 5);
+        decay = 10 + ((variant - 5) * 2);
+      }
+      
+      // Apply global decay mode
+      if (globalDecayMode === 'minimal') {
+        duration = Math.min(duration, 0.15);
+        decay = decay * 3;
+      } else if (globalDecayMode === 'ambient') {
+        duration = duration * 1.5;
+        decay = decay * 0.5;
+      }
+      
+      // Apply harmonization
+      if (harmonized) {
+        freq = 55; // Root note (A1)
+      }
+      
+      const length = Math.floor(sampleRate * duration);
+      const buffer = ctx.createBuffer(1, length, sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      for (let i = 0; i < length; i++) {
+        const t = i / sampleRate;
+        const env = Math.exp(-t * decay);
+        data[i] = Math.sin(2 * Math.PI * freq * t) * env;
+      }
+      
+      return buffer;
+    }
+
+    function generate808Snare(variant, ctx) {
+      const sampleRate = ctx.sampleRate;
+      let duration = 0.2 + (variant * 0.03);
+      const length = Math.floor(sampleRate * duration);
+      const buffer = ctx.createBuffer(1, length, sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      let tone = 180 + (variant * 20);
+      const noiseMix = 0.6 + (variant * 0.04);
+      let decay = 10 + (variant * 2);
+      
+      // Apply global decay mode
+      if (globalDecayMode === 'minimal') {
+        duration = Math.min(duration, 0.08);
+        decay = decay * 3;
+      } else if (globalDecayMode === 'ambient') {
+        duration = duration * 2;
+        decay = decay * 0.4;
+      }
+      
+      // Apply harmonization (5th above kick)
+      if (harmonized) {
+        tone = 82.5; // E2 (5th above A1)
+      }
+      
+      for (let i = 0; i < Math.floor(sampleRate * duration); i++) {
+        const t = i / sampleRate;
+        const env = Math.exp(-t * decay);
+        const toneWave = Math.sin(2 * Math.PI * tone * t);
+        const noise = (Math.random() * 2 - 1);
+        data[i] = (toneWave * (1 - noiseMix) + noise * noiseMix) * env * 0.2;
+      }
+      return buffer;
+    }
+
+    function generate808Hat(variant, isOpen, ctx) {
+      const sampleRate = ctx.sampleRate;
+      const duration = isOpen ? (0.3 + variant * 0.05) : (0.08 + variant * 0.01);
+      const length = Math.floor(sampleRate * duration);
+      const buffer = ctx.createBuffer(1, length, sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      const decay = isOpen ? (15 + variant * 2) : (30 + variant * 5);
+      const metallic = 5000 + (variant * 500);
+      
+      for (let i = 0; i < length; i++) {
+        const t = i / sampleRate;
+        const env = Math.exp(-t * decay);
+        const square = Math.sign(Math.sin(2 * Math.PI * metallic * t));
+        const noise = (Math.random() * 2 - 1);
+        data[i] = (noise * 0.9 + square * 0.1) * env * 0.15;
+      }
+      return buffer;
+    }
+
+    function generate808Tom(variant, ctx) {
+      const sampleRate = ctx.sampleRate;
+      let duration = 0.4 + (variant * 0.1);
+      const length = Math.floor(sampleRate * duration);
+      const buffer = ctx.createBuffer(1, length, sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      let freq = 100 + (variant * 15);
+      let decay = 8 + (variant * 2);
+      
+      // Apply global decay mode
+      if (globalDecayMode === 'minimal') {
+        duration = Math.min(duration, 0.15);
+        decay = decay * 2;
+      } else if (globalDecayMode === 'ambient') {
+        duration = duration * 1.8;
+        decay = decay * 0.5;
+      }
+      
+      // Apply harmonization (octave above kick)
+      if (harmonized) {
+        freq = 110; // A2 (octave above A1)
+      }
+      
+      for (let i = 0; i < Math.floor(sampleRate * duration); i++) {
+        const t = i / sampleRate;
+        const env = Math.exp(-t * decay);
+        data[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.5;
+      }
+      return buffer;
+    }
+
+    function midiToFreq(note) {
+      return 440 * Math.pow(2, (note - 69) / 12);
+    }
+
+    function generateBass(freq) {
+      const sampleRate = audioContext.sampleRate;
+      const duration = 0.2;
+      const length = Math.floor(sampleRate * duration);
+      const buffer = audioContext.createBuffer(1, length, sampleRate);
+      const data = buffer.getChannelData(0);
+      const decay = 8;
+      
+      // Attack and release times to prevent clicks
+      const attackTime = 0.005; // 5ms fade-in
+      const releaseTime = 0.01; // 10ms fade-out
+      const attackSamples = Math.floor(sampleRate * attackTime);
+      const releaseSamples = Math.floor(sampleRate * releaseTime);
+      
+      for (let i = 0; i < length; i++) {
+        const t = i / sampleRate;
+        let env = Math.exp(-t * decay);
+        
+        // Apply fade-in at the start
+        if (i < attackSamples) {
+          env *= i / attackSamples;
+        }
+        
+        // Apply fade-out at the end
+        if (i > length - releaseSamples) {
+          const fadePos = length - i;
+          env *= fadePos / releaseSamples;
+        }
+        
+        data[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.15;
+      }
+      return buffer;
+    }
+
+    function generateBassPattern() {
+      const roots = [40, 45, 48, 52];
+      const root = roots[Math.floor(Math.random() * roots.length)];
+      bassPattern = Array(32).fill(0);
+      bassNotes = Array(32).fill(0);
+      
+      if (bassArpeggio) {
+        const arps = [[0,3,5,7],[0,3,7,12],[0,5,7,12],[0,3,5,3]];
+        const intervals = arps[Math.floor(Math.random() * arps.length)];
+        const density = Math.random() > 0.5 ? 1 : 2;
+        let idx = 0;
+        for (let i = 0; i < steps; i += density) {
+          bassPattern[i] = 1;
+          bassNotes[i] = root + intervals[idx % intervals.length];
+          idx++;
+        }
+      } else {
+        const intervals = [0,3,5,7,12];
+        const numNotes = Math.floor(steps * 0.25) + Math.floor(steps * 0.15);
+        const slots = [];
+        for (let i = 0; i < steps; i++) slots.push(i);
+        for (let i = slots.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [slots[i], slots[j]] = [slots[j], slots[i]];
+        }
+        for (let i = 0; i < numNotes && i < slots.length; i++) {
+          bassPattern[slots[i]] = 1;
+          bassNotes[slots[i]] = root + intervals[Math.floor(Math.random() * intervals.length)];
+        }
+      }
+    }
+
+    function generateAllSamples() {
+      samples = {
+        kick: Array(10).fill(0).map((_, i) => generate808Kick(i, audioContext)),
+        snare: Array(10).fill(0).map((_, i) => generate808Snare(i, audioContext)),
+        hatClosed: Array(8).fill(0).map((_, i) => generate808Hat(i, false, audioContext)),
+        hatOpen: Array(8).fill(0).map((_, i) => generate808Hat(i, true, audioContext)),
+        tom: Array(8).fill(0).map((_, i) => generate808Tom(i, audioContext))
+      };
+    }
+
+    function playSound(drum, forceVariant = null) {
+      if (!audioContext) return;
+      
+      try {
+        const source = audioContext.createBufferSource();
+        const gainNode = audioContext.createGain();
+        
+        let buffer;
+        const variant = forceVariant !== null ? forceVariant : currentSamples[drum];
+        
+        if (drum === 'kick') {
+          buffer = samples.kick[variant];
+        } else if (drum === 'snare') {
+          buffer = samples.snare[variant];
+        } else if (drum === 'hat') {
+          const isOpen = Math.random() > 0.7;
+          const sampleArray = isOpen ? samples.hatOpen : samples.hatClosed;
+          buffer = sampleArray[variant % sampleArray.length];
+        } else if (drum === 'tom') {
+          buffer = samples.tom[variant];
+        }
+        
+        if (!buffer) return;
+        
+        source.buffer = buffer;
+        gainNode.gain.value = 0.8;
+        
+        const drumEffect = effects?.perDrumEffects?.[drum];
+        const params = effects?.perDrumParams?.[drum] || {};
+        
+        if (drumEffect && drumEffect === 'distortion') {
+          const drive = params.drive || 3;
+          const distortion = audioContext.createWaveShaper();
+          const curve = new Float32Array(2048);
+          for (let i = 0; i < 2048; i++) {
+            const x = (i * 2) / 2048 - 1;
+            curve[i] = Math.tanh(x * drive);
+          }
+          distortion.curve = curve;
+          source.connect(distortion);
+          distortion.connect(gainNode);
+          gainNode.connect(masterCompressor);
+        } else if (drumEffect && drumEffect === 'delay') {
+          const delayTime = params.delayTime || 0.25;
+          const feedback = params.feedback || 0.4;
+          const mix = params.mix || 0.5;
+          const delayNode = audioContext.createDelay(2.0);
+          const wetGain = audioContext.createGain();
+          const feedbackGain = audioContext.createGain();
+          delayNode.delayTime.value = delayTime;
+          wetGain.gain.value = mix;
+          feedbackGain.gain.value = feedback;
+          source.connect(gainNode);
+          source.connect(delayNode);
+          delayNode.connect(wetGain);
+          wetGain.connect(gainNode);
+          delayNode.connect(feedbackGain);
+          feedbackGain.connect(delayNode);
+          gainNode.connect(masterCompressor);
+        } else if (drumEffect && drumEffect === 'reverb') {
+          const roomSize = params.roomSize || 0.05;
+          const mix = params.mix || 0.3;
+          const d1 = audioContext.createDelay(0.2);
+          const d2 = audioContext.createDelay(0.2);
+          const d3 = audioContext.createDelay(0.2);
+          const wetGain = audioContext.createGain();
+          d1.delayTime.value = roomSize;
+          d2.delayTime.value = roomSize * 1.4;
+          d3.delayTime.value = roomSize * 1.8;
+          wetGain.gain.value = mix;
+          source.connect(gainNode);
+          source.connect(d1);
+          source.connect(d2);
+          source.connect(d3);
+          d1.connect(wetGain);
+          d2.connect(wetGain);
+          d3.connect(wetGain);
+          wetGain.connect(gainNode);
+          gainNode.connect(masterCompressor);
+        } else {
+          source.connect(gainNode);
+          gainNode.connect(masterCompressor);
+        }
+        
+        source.start(0);
+        
+        const padEl = document.getElementById(`pad-${drum}`);
+        if (padEl) {
+          padEl.classList.add('pulsing');
+          setTimeout(() => padEl.classList.remove('pulsing'), 100);
+        }
+      } catch (error) {
+        console.error('playSound error:', error);
+      }
+    }
+
+    function showFeedback(padId, text) {
+      const padEl = document.getElementById(`pad-${padId}`);
+      if (!padEl) return;
+      const feedbackEl = document.createElement('div');
+      feedbackEl.className = 'feedback';
+      feedbackEl.innerHTML = `<div class="feedback-text">${text}</div>`;
+      padEl.appendChild(feedbackEl);
+      setTimeout(() => feedbackEl.remove(), 1500);
+    }
+
+    function handlePadTap(padId) {
+      if (padId === 'kick' || padId === 'snare' || padId === 'hat' || padId === 'tom') {
+        playSound(padId);
+        showFeedback(padId, padId.toUpperCase());
+      } else if (padId === 'tempoMinus') {
+        tempo = Math.max(60, tempo - 5);
+        showFeedback(padId, `${tempo} BPM`);
+        restartSequencer();
+        render();
+      } else if (padId === 'tempoPlus') {
+        tempo = Math.min(200, tempo + 5);
+        showFeedback(padId, `${tempo} BPM`);
+        restartSequencer();
+        render();
+      } else if (padId === 'stepsMinus' || padId === 'stepsPlus') {
+        // Don't adjust steps on tap - only level 1 if not dragging
+        // This prevents accidental step changes when accessing higher levels
+      }
+    }
+
+    function handleDragComplete(from, to) {
+      executeLevelFunction(from, dragTouchCount);
+      dragTouchCount = 0;
+      padLevels[from] = 1;
+      render();
+    }
+
+    function executeLevelFunction(padId, level) {
+      const isDrum = ['kick', 'snare', 'hat', 'tom'].includes(padId);
+      
+      if (isDrum) {
+        if (level === 2) {
+          const max = padId === 'hat' ? 7 : 9;
+          const oldSample = currentSamples[padId];
+          const newSample = Math.floor(Math.random() * (max + 1));
+          currentSamples[padId] = newSample;
+          showFeedback(padId, `🎲 ${oldSample}→${newSample}`);
+          playSound(padId, newSample);
+        } else if (level === 3) {
+          const emptySlots = patterns[padId].map((v, i) => v === 0 && i < steps ? i : -1).filter(i => i !== -1);
+          if (emptySlots.length > 0) {
+            const slot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
+            patterns[padId][slot] = 1;
+          }
+          showFeedback(padId, '♪ HIT ADDED');
+        } else if (level === 4) {
+          patterns[padId] = Array(32).fill(0).map((_, i) => 
+            i < steps ? (Math.random() > 0.6 ? 1 : 0) : 0
+          );
+          showFeedback(padId, '✨ RANDOMIZED');
+        } else if (level === 5) {
+          const effectTypes = ['distortion', 'delay', 'reverb'];
+          const randomEffect = effectTypes[Math.floor(Math.random() * effectTypes.length)];
+          
+          if (effects.perDrumEffects[padId] === randomEffect) {
+            effects.perDrumEffects[padId] = null;
+            effects.perDrumParams[padId] = {};
+            showFeedback(padId, '🔇 OFF');
+          } else {
+            effects.perDrumEffects[padId] = randomEffect;
+            
+            if (randomEffect === 'distortion') {
+              effects.perDrumParams[padId] = { drive: 2 + Math.random() * 6 };
+              showFeedback(padId, '🎸 DIST');
+            } else if (randomEffect === 'delay') {
+              const delayBeats = [0.0625, 0.125, 0.25, 0.5];
+              const beatTime = (60 / tempo) * delayBeats[Math.floor(Math.random() * delayBeats.length)];
+              effects.perDrumParams[padId] = {
+                delayTime: beatTime,
+                feedback: 0.2 + Math.random() * 0.5,
+                mix: 0.3 + Math.random() * 0.3
+              };
+              showFeedback(padId, '〰️ DELAY');
+            } else if (randomEffect === 'reverb') {
+              effects.perDrumParams[padId] = {
+                roomSize: 0.02 + Math.random() * 0.08,
+                mix: 0.2 + Math.random() * 0.3
+              };
+              showFeedback(padId, '🌊 REVERB');
+            }
+          }
+          playSound(padId);
+        } else if (level === 6) {
+          loadRandomPreset();
+          showFeedback(padId, '🎵 PRESET');
+        } else if (level === 7) {
+          bassEnabled = !bassEnabled;
+          if (bassEnabled) {
+            bassArpeggio = !bassArpeggio;
+            generateBassPattern();
+            showFeedback(padId, bassArpeggio ? '🎹 ARPEGGIO' : '🎹 MELODIC');
+          } else {
+            showFeedback(padId, '🔇 BASS OFF');
+          }
+        }
+      } else if (padId.startsWith('tempo')) {
+        if (level === 2) {
+          // Minimal mode
+          globalDecayMode = globalDecayMode === 'minimal' ? 'normal' : 'minimal';
+          generateAllSamples();
+          showFeedback(padId, globalDecayMode === 'minimal' ? '⚡ MINIMAL' : '🔄 NORMAL');
+        } else if (level === 3) {
+          // Ambient mode
+          globalDecayMode = globalDecayMode === 'ambient' ? 'normal' : 'ambient';
+          generateAllSamples();
+          showFeedback(padId, globalDecayMode === 'ambient' ? '🌊 AMBIENT' : '🔄 NORMAL');
+        } else if (level === 4) {
+          // Harmonize
+          harmonized = !harmonized;
+          generateAllSamples();
+          showFeedback(padId, harmonized ? '🎵 HARMONIZED' : '🔄 UNHARMONIZED');
+        } else if (level === 5) {
+          // Global distortion
+          const allDistorted = ['kick', 'snare', 'hat', 'tom'].every(d => effects.perDrumEffects[d] === 'distortion');
+          if (allDistorted) {
+            ['kick', 'snare', 'hat', 'tom'].forEach(d => {
+              effects.perDrumEffects[d] = null;
+              effects.perDrumParams[d] = {};
+            });
+            showFeedback(padId, '🔇 DIST OFF');
+          } else {
+            ['kick', 'snare', 'hat', 'tom'].forEach(d => {
+              effects.perDrumEffects[d] = 'distortion';
+              effects.perDrumParams[d] = { drive: 3 + Math.random() * 4 };
+            });
+            showFeedback(padId, '🎸 ALL DIST');
+          }
+        } else if (level === 6) {
+          // Global delay
+          const allDelayed = ['kick', 'snare', 'hat', 'tom'].every(d => effects.perDrumEffects[d] === 'delay');
+          if (allDelayed) {
+            ['kick', 'snare', 'hat', 'tom'].forEach(d => {
+              effects.perDrumEffects[d] = null;
+              effects.perDrumParams[d] = {};
+            });
+            showFeedback(padId, '🔇 DELAY OFF');
+          } else {
+            ['kick', 'snare', 'hat', 'tom'].forEach(d => {
+              const delayBeats = [0.0625, 0.125, 0.25, 0.5];
+              const beatTime = (60 / tempo) * delayBeats[Math.floor(Math.random() * delayBeats.length)];
+              effects.perDrumEffects[d] = 'delay';
+              effects.perDrumParams[d] = {
+                delayTime: beatTime,
+                feedback: 0.3 + Math.random() * 0.3,
+                mix: 0.3 + Math.random() * 0.2
+              };
+            });
+            showFeedback(padId, '〰️ ALL DELAY');
+          }
+        } else if (level === 7) {
+          // Swing/Humanize - randomize swing amount
+          if (swingAmount > 0) {
+            swingAmount = 0;
+            showFeedback(padId, '🎵 STRAIGHT');
+          } else {
+            swingAmount = 0.15 + Math.random() * 0.35; // 15-50% swing
+            const percent = Math.round(swingAmount * 100);
+            showFeedback(padId, `🎷 ${percent}% SWING`);
+          }
+          restartSequencer();
+        }
+      } else if (padId.startsWith('steps')) {
+        if (level === 2) {
+          const jumps = [4, 8, 16, 32];
+          const idx = jumps.indexOf(steps);
+          const next = padId === 'stepsPlus' ? jumps[Math.min(idx + 1, 3)] : jumps[Math.max(idx - 1, 0)];
+          steps = next;
+          showFeedback(padId, `${next} STEPS`);
+        } else if (level === 3) {
+          // Rotate pattern - shift all hits left or right
+          const direction = padId === 'stepsPlus' ? 1 : -1;
+          const rotateAmount = direction;
+          
+          ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
+            const pattern = patterns[drum].slice(0, steps);
+            const rotated = Array(steps).fill(0);
+            
+            for (let i = 0; i < steps; i++) {
+              let newPos = (i + rotateAmount + steps) % steps;
+              rotated[newPos] = pattern[i];
+            }
+            
+            patterns[drum] = [...rotated, ...Array(32 - steps).fill(0)];
+          });
+          
+          showFeedback(padId, direction > 0 ? '🔄 ROTATE →' : '🔄 ROTATE ←');
+        } else if (level === 4) {
+          // Reverse all patterns
+          ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
+            const pattern = patterns[drum].slice(0, steps);
+            const reversed = [...pattern].reverse();
+            patterns[drum] = [...reversed, ...Array(32 - steps).fill(0)];
+          });
+          showFeedback(padId, '⏪ REVERSE');
+        } else if (level === 5) {
+          // Sparse mode - remove 40-60% of hits randomly
+          const removePercent = 0.4 + Math.random() * 0.2;
+          
+          ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
+            for (let i = 0; i < steps; i++) {
+              if (patterns[drum][i] === 1 && Math.random() < removePercent) {
+                patterns[drum][i] = 0;
+              }
+            }
+          });
+          
+          const percent = Math.round(removePercent * 100);
+          showFeedback(padId, `🌫️ SPARSE ${percent}%`);
+        } else if (level === 6) {
+          // Dense mode - add hits to empty slots
+          const addPercent = 0.3 + Math.random() * 0.3;
+          
+          ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
+            for (let i = 0; i < steps; i++) {
+              if (patterns[drum][i] === 0 && Math.random() < addPercent) {
+                patterns[drum][i] = 1;
+              }
+            }
+          });
+          
+          const percent = Math.round(addPercent * 100);
+          showFeedback(padId, `🔥 DENSE ${percent}%`);
+        } else if (level === 7) {
+          // Random drum fill/break at the end of the loop
+          const fillLength = Math.min(4, Math.floor(steps / 4)); // Last 4 steps or 25% of pattern
+          const fillStart = steps - fillLength;
+          
+          // Clear the fill section first
+          ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
+            for (let i = fillStart; i < steps; i++) {
+              patterns[drum][i] = 0;
+            }
+          });
+          
+          // Add random fill pattern
+          for (let i = fillStart; i < steps; i++) {
+            // Kick: sparse (30% chance)
+            if (Math.random() < 0.3) patterns.kick[i] = 1;
+            
+            // Snare: moderate (50% chance)
+            if (Math.random() < 0.5) patterns.snare[i] = 1;
+            
+            // Hat: dense (70% chance)
+            if (Math.random() < 0.7) patterns.hat[i] = 1;
+            
+            // Tom: moderate (40% chance for rolls)
+            if (Math.random() < 0.4) patterns.tom[i] = 1;
+          }
+          
+          showFeedback(padId, '🥁 FILL!');
+        }
+      }
+    }
+
+    function loadRandomPreset() {
+      const presets = [
+        // House
+        { kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+        // Techno
+        { kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], hat: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0], tom: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+        // Hip Hop
+        { kick: [1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0], tom: [0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0] },
+        // DnB
+        { kick: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0], hat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+        // Breakbeat
+        { kick: [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], snare: [0,0,0,0,1,0,0,1,0,0,0,1,1,0,0,0], hat: [1,1,0,1,1,0,1,1,1,0,1,1,0,1,1,0], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0] },
+        // Disco
+        { kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+        // Reggae
+        { kick: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], snare: [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0], hat: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+        // Afrobeat
+        { kick: [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0], snare: [0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], hat: [1,0,1,1,0,1,0,1,1,0,1,1,0,1,0,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1] },
+        // Trap
+        { kick: [1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0], hat: [1,0,1,1,0,1,1,0,1,0,1,1,0,1,1,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+        // Jungle
+        { kick: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,1,0,0,1,0,1,0,1,0], hat: [1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+        // Garage
+        { kick: [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0], snare: [0,0,1,0,0,0,0,0,1,0,0,1,0,0,1,0], hat: [1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1] },
+        // Minimal
+        { kick: [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0], snare: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], hat: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0], tom: [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0] },
+        // Electro
+        { kick: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [1,0,1,1,0,1,1,0,1,0,1,1,0,1,1,0], tom: [0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0] },
+        // Tribal
+        { kick: [1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0], snare: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], hat: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], tom: [0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,1] },
+        // Metal
+        { kick: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+        // Latin
+        { kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0], hat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1] },
+        // Samba
+        { kick: [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], snare: [0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0], hat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], tom: [0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1] },
+        // Industrial
+        { kick: [1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1], tom: [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0] }
+      ];
+      const preset = presets[Math.floor(Math.random() * presets.length)];
+      patterns = {
+        kick: [...preset.kick, ...Array(16).fill(0)],
+        snare: [...preset.snare, ...Array(16).fill(0)],
+        hat: [...preset.hat, ...Array(16).fill(0)],
+        tom: [...preset.tom, ...Array(16).fill(0)]
+      };
+    }
+
+    function togglePlayback() {
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        startSequencer();
+      } else {
+        if (sequencerInterval) clearInterval(sequencerInterval);
+      }
+      render();
+    }
+
+    function startSequencer() {
+      if (sequencerInterval) clearInterval(sequencerInterval);
+      const stepTime = (60 / tempo / 4) * 1000;
+      sequencerInterval = setInterval(() => {
+        currentStep = (currentStep + 1) % steps;
+        
+        // Calculate swing delay for off-beats (odd steps)
+        let swingDelay = 0;
+        if (swingAmount > 0 && currentStep % 2 === 1) {
+          swingDelay = stepTime * swingAmount * 0.5; // Up to 50% delay on off-beats
+        }
+        
+        setTimeout(() => {
+          ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
+            if (patterns[drum][currentStep] === 1) playSound(drum);
+          });
+          
+          if (bassEnabled && bassPattern[currentStep] === 1 && bassNotes[currentStep] > 0) {
+            const freq = midiToFreq(bassNotes[currentStep]);
+            const buffer = generateBass(freq);
+            const source = audioContext.createBufferSource();
+            const gainNode = audioContext.createGain();
+            source.buffer = buffer;
+            source.connect(gainNode);
+            gainNode.connect(masterCompressor);
+            gainNode.gain.value = 0.8;
+            source.start(0);
+          }
+        }, swingDelay);
+      }, stepTime);
+    }
+
+    function restartSequencer() {
+      if (isPlaying) startSequencer();
+    }
+
+    function setupTouchHandlers() {
+      pads.forEach(pad => {
+        const el = document.getElementById(`pad-${pad.id}`);
+        if (!el) return;
+        
+        el.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          if (!dragStart) {
+            dragStart = pad.id;
+            dragTouchCount = 1;
+            const rect = el.getBoundingClientRect();
+            dragStartPos = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+            handlePadTap(pad.id);
+            padLevels[pad.id] = 1;
+            render();
+          }
+        }, { passive: false });
+        
+        el.addEventListener('touchmove', (e) => {
+          e.preventDefault();
+          if (!dragStart || !dragStartPos) return;
+          const touch = e.touches[0];
+          if (!dragLineEl) {
+            dragLineEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            dragLineEl.className = 'drag-line';
+            dragLineEl.style.position = 'fixed';
+            dragLineEl.style.top = '0';
+            dragLineEl.style.left = '0';
+            dragLineEl.style.width = '100%';
+            dragLineEl.style.height = '100%';
+            dragLineEl.style.pointerEvents = 'none';
+            dragLineEl.style.zIndex = '1000';
+            document.body.appendChild(dragLineEl);
+          }
+          dragLineEl.innerHTML = `<line x1="${dragStartPos.x}" y1="${dragStartPos.y}" x2="${touch.clientX}" y2="${touch.clientY}" stroke="rgba(255, 255, 255, 0.8)" stroke-width="4" stroke-linecap="round" filter="drop-shadow(0 0 10px rgba(255, 255, 255, 0.6))" />`;
+          const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+          if (targetEl) {
+            const targetPad = pads.find(p => {
+              const padEl = document.getElementById(`pad-${p.id}`);
+              return padEl && padEl.contains(targetEl);
+            });
+            if (targetPad && targetPad.id !== dragStart && targetPad.id !== currentDragOver) {
+              currentDragOver = targetPad.id;
+              dragTouchCount = Math.min(7, dragTouchCount + 1);
+              padLevels[dragStart] = dragTouchCount;
+              render();
+            }
+          }
+        }, { passive: false });
+        
+        el.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          if (dragLineEl) {
+            dragLineEl.remove();
+            dragLineEl = null;
+          }
+          if (dragStart && currentDragOver && dragStart !== currentDragOver) {
+            handleDragComplete(dragStart, currentDragOver);
+          } else {
+            dragTouchCount = 0;
+            if (dragStart) padLevels[dragStart] = 1;
+          }
+          dragStart = null;
+          dragStartPos = null;
+          currentDragOver = null;
+          render();
+        }, { passive: false });
+      });
+    }
+
+    function render() {
+      const mainApp = document.getElementById('mainApp');
+      if (!mainApp) return;
+      mainApp.innerHTML = `
+        <div class="container">
+          <div class="app-wrapper">
+            <h1>Puzzle Drum Machine</h1>
+            <div class="pad-grid">
+              ${pads.map(pad => `
+                <div id="pad-${pad.id}" class="pad ${pad.grad} ${currentDragOver === pad.id ? 'drag-over' : ''}">
+                  <div class="pad-label">${pad.label}</div>
+                  <div class="level-dots">
+                    ${Array(7).fill(0).map((_, i) => `<div class="dot ${i < padLevels[pad.id] ? 'active' : ''}"></div>`).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="controls">
+              <div class="controls-row">
+                <span class="info-text">BPM: ${tempo}</span>
+                <span class="info-text">Steps: ${steps}</span>
+                <button id="playBtn" class="play-btn ${isPlaying ? 'playing' : ''}">${isPlaying ? '⏸ PAUSE' : '▶ PLAY'}</button>
+              </div>
+            </div>
+            <div class="hint">Drag between pads to unlock features!</div>
+          </div>
+        </div>
+      `;
+      setupTouchHandlers();
+      const playBtn = document.getElementById('playBtn');
+      if (playBtn) playBtn.addEventListener('click', togglePlayback);
+    }
+
+    document.getElementById('app').innerHTML = `
+      <div id="startScreen" class="start-screen">
+        <button id="startBtn" class="start-btn">RANDO RAINBOW START</button>
+      </div>
+      <div id="mainApp" style="display: none;"></div>
+    `;
+    document.getElementById('startBtn').addEventListener('click', initAudio);
+  </script>
+</body>
+</html>
