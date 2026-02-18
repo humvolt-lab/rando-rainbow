@@ -333,63 +333,116 @@
 
     function generate808Kick(variant, ctx) {
       const sampleRate = ctx.sampleRate;
-      let duration, freq, decay;
-      
-      if (variant < 5) {
-        duration = 1.5 + (variant * 0.5);
-        freq = 45 + (variant * 3);
-        decay = 3 + (variant * 0.5);
-      } else {
-        duration = 0.4 + ((variant - 5) * 0.05);
-        freq = 55 + ((variant - 5) * 5);
-        decay = 10 + ((variant - 5) * 2);
-      }
-      
-      if (globalDecayMode === 'minimal') {
-        duration = Math.min(duration, 0.15);
-        decay = decay * 3;
-      } else if (globalDecayMode === 'ambient') {
-        duration = duration * 1.5;
-        decay = decay * 0.5;
-      }
-      
+
+      // 30 variants: mix of deep/long, punchy/short, mid-range
+      const configs = [
+        // Deep long (808 style)
+        { duration: 1.5, freq: 45, decay: 3.0, pitchDrop: 40 },
+        { duration: 2.0, freq: 48, decay: 2.5, pitchDrop: 35 },
+        { duration: 2.5, freq: 50, decay: 2.2, pitchDrop: 30 },
+        { duration: 1.8, freq: 43, decay: 2.8, pitchDrop: 38 },
+        { duration: 3.0, freq: 46, decay: 2.0, pitchDrop: 28 },
+        // Mid punch
+        { duration: 0.8, freq: 55, decay: 6.0, pitchDrop: 25 },
+        { duration: 0.7, freq: 58, decay: 7.0, pitchDrop: 22 },
+        { duration: 0.9, freq: 52, decay: 5.5, pitchDrop: 20 },
+        { duration: 1.0, freq: 60, decay: 5.0, pitchDrop: 30 },
+        { duration: 0.6, freq: 62, decay: 8.0, pitchDrop: 18 },
+        // Short punchy
+        { duration: 0.25, freq: 65, decay: 18,  pitchDrop: 15 },
+        { duration: 0.20, freq: 70, decay: 22,  pitchDrop: 12 },
+        { duration: 0.30, freq: 60, decay: 15,  pitchDrop: 18 },
+        { duration: 0.18, freq: 75, decay: 28,  pitchDrop: 10 },
+        { duration: 0.35, freq: 55, decay: 12,  pitchDrop: 20 },
+        // Subby low
+        { duration: 2.2, freq: 40, decay: 2.6, pitchDrop: 32 },
+        { duration: 1.6, freq: 38, decay: 3.2, pitchDrop: 30 },
+        { duration: 2.8, freq: 42, decay: 2.1, pitchDrop: 25 },
+        { duration: 1.2, freq: 44, decay: 4.0, pitchDrop: 28 },
+        { duration: 0.5, freq: 50, decay: 9.0, pitchDrop: 22 },
+        // Tight clicky
+        { duration: 0.15, freq: 80, decay: 35,  pitchDrop: 8  },
+        { duration: 0.12, freq: 90, decay: 40,  pitchDrop: 6  },
+        { duration: 0.40, freq: 58, decay: 11,  pitchDrop: 16 },
+        { duration: 0.10, freq: 100,decay: 50,  pitchDrop: 5  },
+        { duration: 0.22, freq: 72, decay: 24,  pitchDrop: 10 },
+        // Long ambient-ish
+        { duration: 3.5, freq: 47, decay: 1.8, pitchDrop: 20 },
+        { duration: 4.0, freq: 45, decay: 1.5, pitchDrop: 18 },
+        { duration: 1.4, freq: 53, decay: 3.5, pitchDrop: 26 },
+        { duration: 2.6, freq: 49, decay: 2.3, pitchDrop: 22 },
+        { duration: 0.45, freq: 64, decay: 10,  pitchDrop: 14 },
+      ];
+
+      let { duration, freq, decay, pitchDrop } = configs[variant % configs.length];
+
+      if (globalDecayMode === 'minimal') { duration = Math.min(duration, 0.15); decay *= 3; }
+      else if (globalDecayMode === 'ambient') { duration *= 1.5; decay *= 0.5; }
       if (harmonized) freq = 55;
-      
+
       const length = Math.floor(sampleRate * duration);
       const buffer = ctx.createBuffer(1, length, sampleRate);
       const data = buffer.getChannelData(0);
-      
+
       for (let i = 0; i < length; i++) {
         const t = i / sampleRate;
         const env = Math.exp(-t * decay);
-        data[i] = Math.sin(2 * Math.PI * freq * t) * env;
+        // Pitch envelope: freq drops over first ~50ms
+        const pitchEnv = Math.exp(-t * 30);
+        const instFreq = freq + pitchDrop * pitchEnv;
+        data[i] = Math.sin(2 * Math.PI * instFreq * t) * env;
       }
-      
+
       return buffer;
     }
 
     function generate808Snare(variant, ctx) {
       const sampleRate = ctx.sampleRate;
-      let duration = 0.2 + (variant * 0.03);
+
+      const configs = [
+        { duration: 0.20, tone: 180, noiseMix: 0.65, decay: 12 },
+        { duration: 0.22, tone: 200, noiseMix: 0.68, decay: 11 },
+        { duration: 0.18, tone: 220, noiseMix: 0.70, decay: 14 },
+        { duration: 0.25, tone: 160, noiseMix: 0.60, decay: 10 },
+        { duration: 0.15, tone: 240, noiseMix: 0.72, decay: 18 },
+        { duration: 0.40, tone: 170, noiseMix: 0.55, decay: 7  },
+        { duration: 0.45, tone: 190, noiseMix: 0.58, decay: 6  },
+        { duration: 0.35, tone: 210, noiseMix: 0.62, decay: 8  },
+        { duration: 0.50, tone: 155, noiseMix: 0.50, decay: 5  },
+        { duration: 0.38, tone: 230, noiseMix: 0.64, decay: 7  },
+        { duration: 0.70, tone: 175, noiseMix: 0.50, decay: 4  },
+        { duration: 0.80, tone: 165, noiseMix: 0.48, decay: 3.5},
+        { duration: 0.60, tone: 195, noiseMix: 0.52, decay: 4.5},
+        { duration: 0.90, tone: 150, noiseMix: 0.45, decay: 3  },
+        { duration: 0.55, tone: 215, noiseMix: 0.54, decay: 5  },
+        { duration: 0.10, tone: 280, noiseMix: 0.75, decay: 28 },
+        { duration: 0.08, tone: 300, noiseMix: 0.78, decay: 35 },
+        { duration: 0.12, tone: 260, noiseMix: 0.72, decay: 22 },
+        { duration: 0.09, tone: 320, noiseMix: 0.80, decay: 32 },
+        { duration: 0.14, tone: 250, noiseMix: 0.70, decay: 20 },
+        { duration: 0.30, tone: 130, noiseMix: 0.40, decay: 9  },
+        { duration: 0.28, tone: 140, noiseMix: 0.42, decay: 10 },
+        { duration: 0.32, tone: 120, noiseMix: 0.38, decay: 8  },
+        { duration: 0.26, tone: 145, noiseMix: 0.44, decay: 11 },
+        { duration: 0.35, tone: 125, noiseMix: 0.36, decay: 7  },
+        { duration: 0.20, tone: 200, noiseMix: 0.90, decay: 13 },
+        { duration: 0.18, tone: 220, noiseMix: 0.92, decay: 15 },
+        { duration: 0.22, tone: 180, noiseMix: 0.88, decay: 11 },
+        { duration: 0.16, tone: 240, noiseMix: 0.94, decay: 17 },
+        { duration: 0.24, tone: 170, noiseMix: 0.86, decay: 10 },
+      ];
+
+      let { duration, tone, noiseMix, decay } = configs[variant % configs.length];
+
+      if (globalDecayMode === 'minimal') { duration = Math.min(duration, 0.08); decay *= 3; }
+      else if (globalDecayMode === 'ambient') { duration *= 2; decay *= 0.4; }
+      if (harmonized) tone = 82.5;
+
       const length = Math.floor(sampleRate * duration);
       const buffer = ctx.createBuffer(1, length, sampleRate);
       const data = buffer.getChannelData(0);
-      
-      let tone = 180 + (variant * 20);
-      const noiseMix = 0.6 + (variant * 0.04);
-      let decay = 10 + (variant * 2);
-      
-      if (globalDecayMode === 'minimal') {
-        duration = Math.min(duration, 0.08);
-        decay = decay * 3;
-      } else if (globalDecayMode === 'ambient') {
-        duration = duration * 2;
-        decay = decay * 0.4;
-      }
-      
-      if (harmonized) tone = 82.5;
-      
-      for (let i = 0; i < Math.floor(sampleRate * duration); i++) {
+
+      for (let i = 0; i < length; i++) {
         const t = i / sampleRate;
         const env = Math.exp(-t * decay);
         const toneWave = Math.sin(2 * Math.PI * tone * t);
@@ -401,14 +454,68 @@
 
     function generate808Hat(variant, isOpen, ctx) {
       const sampleRate = ctx.sampleRate;
-      const duration = isOpen ? (0.3 + variant * 0.05) : (0.08 + variant * 0.01);
+
+      const closedConfigs = [
+        { duration: 0.08, decay: 30, metallic: 5000 },
+        { duration: 0.06, decay: 40, metallic: 5500 },
+        { duration: 0.10, decay: 25, metallic: 4500 },
+        { duration: 0.05, decay: 50, metallic: 6000 },
+        { duration: 0.12, decay: 20, metallic: 4000 },
+        { duration: 0.07, decay: 35, metallic: 5200 },
+        { duration: 0.09, decay: 28, metallic: 4800 },
+        { duration: 0.04, decay: 60, metallic: 6500 },
+        { duration: 0.15, decay: 18, metallic: 3800 },
+        { duration: 0.11, decay: 22, metallic: 4200 },
+        { duration: 0.06, decay: 38, metallic: 5800 },
+        { duration: 0.08, decay: 32, metallic: 5100 },
+        { duration: 0.03, decay: 70, metallic: 7000 },
+        { duration: 0.13, decay: 16, metallic: 3600 },
+        { duration: 0.07, decay: 42, metallic: 5400 },
+        { duration: 0.09, decay: 26, metallic: 4700 },
+        { duration: 0.05, decay: 55, metallic: 6200 },
+        { duration: 0.10, decay: 24, metallic: 4400 },
+        { duration: 0.06, decay: 45, metallic: 5700 },
+        { duration: 0.12, decay: 19, metallic: 3900 },
+        { duration: 0.08, decay: 33, metallic: 5300 },
+        { duration: 0.04, decay: 65, metallic: 6800 },
+        { duration: 0.07, decay: 36, metallic: 4900 },
+        { duration: 0.11, decay: 21, metallic: 4100 },
+      ];
+
+      const openConfigs = [
+        { duration: 0.30, decay: 15, metallic: 5000 },
+        { duration: 0.40, decay: 12, metallic: 5500 },
+        { duration: 0.25, decay: 18, metallic: 4500 },
+        { duration: 0.50, decay: 10, metallic: 6000 },
+        { duration: 0.20, decay: 22, metallic: 4000 },
+        { duration: 0.35, decay: 13, metallic: 5200 },
+        { duration: 0.60, decay:  8, metallic: 4800 },
+        { duration: 0.45, decay: 11, metallic: 6500 },
+        { duration: 0.15, decay: 28, metallic: 3800 },
+        { duration: 0.55, decay:  9, metallic: 4200 },
+        { duration: 0.70, decay:  7, metallic: 5800 },
+        { duration: 0.28, decay: 16, metallic: 5100 },
+        { duration: 0.38, decay: 14, metallic: 7000 },
+        { duration: 0.80, decay:  6, metallic: 3600 },
+        { duration: 0.22, decay: 20, metallic: 5400 },
+        { duration: 0.42, decay: 12, metallic: 4700 },
+        { duration: 0.65, decay:  8, metallic: 6200 },
+        { duration: 0.32, decay: 15, metallic: 4400 },
+        { duration: 0.48, decay: 10, metallic: 5700 },
+        { duration: 0.18, decay: 25, metallic: 3900 },
+        { duration: 0.58, decay:  9, metallic: 5300 },
+        { duration: 0.75, decay:  7, metallic: 6800 },
+        { duration: 0.33, decay: 14, metallic: 4900 },
+        { duration: 0.52, decay: 10, metallic: 4100 },
+      ];
+
+      const configs = isOpen ? openConfigs : closedConfigs;
+      const { duration, decay, metallic } = configs[variant % configs.length];
+
       const length = Math.floor(sampleRate * duration);
       const buffer = ctx.createBuffer(1, length, sampleRate);
       const data = buffer.getChannelData(0);
-      
-      const decay = isOpen ? (15 + variant * 2) : (30 + variant * 5);
-      const metallic = 5000 + (variant * 500);
-      
+
       for (let i = 0; i < length; i++) {
         const t = i / sampleRate;
         const env = Math.exp(-t * decay);
@@ -421,28 +528,56 @@
 
     function generate808Tom(variant, ctx) {
       const sampleRate = ctx.sampleRate;
-      let duration = 0.4 + (variant * 0.1);
+
+      const configs = [
+        // Short punchy toms
+        { duration: 0.20, freq: 100, decay: 16 },
+        { duration: 0.18, freq: 120, decay: 18 },
+        { duration: 0.15, freq: 140, decay: 22 },
+        { duration: 0.22, freq: 90,  decay: 14 },
+        { duration: 0.12, freq: 160, decay: 28 },
+        // Mid toms
+        { duration: 0.40, freq: 110, decay: 8  },
+        { duration: 0.45, freq: 125, decay: 7  },
+        { duration: 0.35, freq: 95,  decay: 9  },
+        { duration: 0.50, freq: 130, decay: 6  },
+        { duration: 0.38, freq: 105, decay: 8  },
+        // Long floor toms
+        { duration: 0.80, freq: 80,  decay: 4  },
+        { duration: 0.90, freq: 75,  decay: 3.5},
+        { duration: 0.70, freq: 85,  decay: 4.5},
+        { duration: 1.00, freq: 70,  decay: 3  },
+        { duration: 0.60, freq: 88,  decay: 5  },
+        // High pitched toms
+        { duration: 0.25, freq: 180, decay: 12 },
+        { duration: 0.20, freq: 200, decay: 15 },
+        { duration: 0.30, freq: 160, decay: 10 },
+        { duration: 0.18, freq: 220, decay: 18 },
+        { duration: 0.28, freq: 170, decay: 11 },
+        // Deep long subs
+        { duration: 1.20, freq: 60,  decay: 2.5},
+        { duration: 1.50, freq: 55,  decay: 2  },
+        { duration: 1.00, freq: 65,  decay: 3  },
+        { duration: 0.80, freq: 58,  decay: 3.5},
+      ];
+
+      let { duration, freq, decay } = configs[variant % configs.length];
+
+      if (globalDecayMode === 'minimal') { duration = Math.min(duration, 0.15); decay *= 2; }
+      else if (globalDecayMode === 'ambient') { duration *= 1.8; decay *= 0.5; }
+      if (harmonized) freq = 110;
+
       const length = Math.floor(sampleRate * duration);
       const buffer = ctx.createBuffer(1, length, sampleRate);
       const data = buffer.getChannelData(0);
-      
-      let freq = 100 + (variant * 15);
-      let decay = 8 + (variant * 2);
-      
-      if (globalDecayMode === 'minimal') {
-        duration = Math.min(duration, 0.15);
-        decay = decay * 2;
-      } else if (globalDecayMode === 'ambient') {
-        duration = duration * 1.8;
-        decay = decay * 0.5;
-      }
-      
-      if (harmonized) freq = 110;
-      
-      for (let i = 0; i < Math.floor(sampleRate * duration); i++) {
+
+      for (let i = 0; i < length; i++) {
         const t = i / sampleRate;
         const env = Math.exp(-t * decay);
-        data[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.5;
+        // Slight pitch drop for that tom character
+        const pitchEnv = Math.exp(-t * 20);
+        const instFreq = freq + (freq * 0.15) * pitchEnv;
+        data[i] = Math.sin(2 * Math.PI * instFreq * t) * env * 0.5;
       }
       return buffer;
     }
@@ -507,11 +642,11 @@
 
     function generateAllSamples() {
       samples = {
-        kick: Array(10).fill(0).map((_, i) => generate808Kick(i, audioContext)),
-        snare: Array(10).fill(0).map((_, i) => generate808Snare(i, audioContext)),
-        hatClosed: Array(8).fill(0).map((_, i) => generate808Hat(i, false, audioContext)),
-        hatOpen: Array(8).fill(0).map((_, i) => generate808Hat(i, true, audioContext)),
-        tom: Array(8).fill(0).map((_, i) => generate808Tom(i, audioContext))
+        kick: Array(30).fill(0).map((_, i) => generate808Kick(i, audioContext)),
+        snare: Array(30).fill(0).map((_, i) => generate808Snare(i, audioContext)),
+        hatClosed: Array(24).fill(0).map((_, i) => generate808Hat(i, false, audioContext)),
+        hatOpen: Array(24).fill(0).map((_, i) => generate808Hat(i, true, audioContext)),
+        tom: Array(24).fill(0).map((_, i) => generate808Tom(i, audioContext))
       };
     }
 
@@ -650,7 +785,7 @@
       
       if (isDrum) {
         if (level === 2) {
-          const max = padId === 'hat' ? 7 : 9;
+          const max = padId === 'hat' ? 23 : (padId === 'tom' ? 23 : 29);
           const oldSample = currentSamples[padId];
           const newSample = Math.floor(Math.random() * (max + 1));
           currentSamples[padId] = newSample;
