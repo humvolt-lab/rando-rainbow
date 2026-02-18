@@ -384,12 +384,18 @@
       const buffer = ctx.createBuffer(1, length, sampleRate);
       const data = buffer.getChannelData(0);
 
+      const attackSamples = Math.floor(sampleRate * 0.004); // 4ms fade-in
+      const releaseSamples = Math.floor(sampleRate * 0.008); // 8ms fade-out
+
       for (let i = 0; i < length; i++) {
         const t = i / sampleRate;
-        const env = Math.exp(-t * decay);
+        let env = Math.exp(-t * decay);
         // Pitch envelope: freq drops over first ~50ms
         const pitchEnv = Math.exp(-t * 30);
         const instFreq = freq + pitchDrop * pitchEnv;
+        // Anti-click fades
+        if (i < attackSamples) env *= i / attackSamples;
+        if (i > length - releaseSamples) env *= (length - i) / releaseSamples;
         data[i] = Math.sin(2 * Math.PI * instFreq * t) * env;
       }
 
@@ -571,12 +577,18 @@
       const buffer = ctx.createBuffer(1, length, sampleRate);
       const data = buffer.getChannelData(0);
 
+      const attackSamples = Math.floor(sampleRate * 0.004); // 4ms fade-in
+      const releaseSamples = Math.floor(sampleRate * 0.008); // 8ms fade-out
+
       for (let i = 0; i < length; i++) {
         const t = i / sampleRate;
-        const env = Math.exp(-t * decay);
+        let env = Math.exp(-t * decay);
         // Slight pitch drop for that tom character
         const pitchEnv = Math.exp(-t * 20);
         const instFreq = freq + (freq * 0.15) * pitchEnv;
+        // Anti-click fades
+        if (i < attackSamples) env *= i / attackSamples;
+        if (i > length - releaseSamples) env *= (length - i) / releaseSamples;
         data[i] = Math.sin(2 * Math.PI * instFreq * t) * env * 0.5;
       }
       return buffer;
