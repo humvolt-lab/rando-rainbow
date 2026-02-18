@@ -22,23 +22,26 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       overscroll-behavior: none;
       width: 100%;
-      min-height: 100vh;
-      overflow-x: hidden;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .container {
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 1rem;
-      padding-top: 2rem;
+      justify-content: center;
+      padding: 0.5rem;
     }
 
     .app-wrapper {
       width: 100%;
       max-width: 28rem;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: center;
     }
 
     h1 {
@@ -52,13 +55,13 @@
     .pad-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
     }
 
     .pad {
-      aspect-ratio: 1;
-      border-radius: 1rem;
+      aspect-ratio: 2 / 1;
+      border-radius: 0.75rem;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -97,18 +100,18 @@
 
     .pad-label {
       font-weight: bold;
-      font-size: 0.875rem;
-      margin-bottom: 0.25rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.2rem;
     }
 
     .level-dots {
       display: flex;
-      gap: 0.25rem;
+      gap: 0.2rem;
     }
 
     .dot {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.3);
     }
@@ -144,18 +147,19 @@
     .controls {
       background: #1f2937;
       border-radius: 0.75rem;
-      padding: 1rem;
+      padding: 0.6rem 0.75rem;
     }
 
     .controls-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.75rem;
     }
 
-    .controls-row:last-child {
-      margin-bottom: 0;
+    .controls-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
 
     .info-text {
@@ -163,7 +167,7 @@
     }
 
     .play-btn {
-      padding: 0.5rem 1.5rem;
+      padding: 0.5rem 1.25rem;
       background: #10b981;
       color: white;
       border: none;
@@ -186,10 +190,10 @@
     }
 
     .hint {
-      margin-top: 1rem;
+      margin-top: 0.4rem;
       text-align: center;
       color: #9ca3af;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
     }
 
     .start-screen {
@@ -274,9 +278,9 @@
       }
     };
     
-    let globalDecayMode = 'normal'; // 'normal', 'minimal', 'ambient'
+    let globalDecayMode = 'normal';
     let harmonized = false;
-    let swingAmount = 0; // 0 = no swing, 0.5 = max swing
+    let swingAmount = 0;
     
     let bassEnabled = false;
     let bassArpeggio = false;
@@ -304,13 +308,12 @@
       try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
-        // Create master compressor for output normalization
         masterCompressor = audioContext.createDynamicsCompressor();
-        masterCompressor.threshold.value = -24; // Start compressing at -24dB
-        masterCompressor.knee.value = 30; // Smooth compression curve
-        masterCompressor.ratio.value = 12; // Heavy compression/limiting
-        masterCompressor.attack.value = 0.003; // Fast attack (3ms)
-        masterCompressor.release.value = 0.25; // Quick release (250ms)
+        masterCompressor.threshold.value = -24;
+        masterCompressor.knee.value = 30;
+        masterCompressor.ratio.value = 12;
+        masterCompressor.attack.value = 0.003;
+        masterCompressor.release.value = 0.25;
         masterCompressor.connect(audioContext.destination);
         
         generateAllSamples();
@@ -342,7 +345,6 @@
         decay = 10 + ((variant - 5) * 2);
       }
       
-      // Apply global decay mode
       if (globalDecayMode === 'minimal') {
         duration = Math.min(duration, 0.15);
         decay = decay * 3;
@@ -351,10 +353,7 @@
         decay = decay * 0.5;
       }
       
-      // Apply harmonization
-      if (harmonized) {
-        freq = 55; // Root note (A1)
-      }
+      if (harmonized) freq = 55;
       
       const length = Math.floor(sampleRate * duration);
       const buffer = ctx.createBuffer(1, length, sampleRate);
@@ -380,7 +379,6 @@
       const noiseMix = 0.6 + (variant * 0.04);
       let decay = 10 + (variant * 2);
       
-      // Apply global decay mode
       if (globalDecayMode === 'minimal') {
         duration = Math.min(duration, 0.08);
         decay = decay * 3;
@@ -389,10 +387,7 @@
         decay = decay * 0.4;
       }
       
-      // Apply harmonization (5th above kick)
-      if (harmonized) {
-        tone = 82.5; // E2 (5th above A1)
-      }
+      if (harmonized) tone = 82.5;
       
       for (let i = 0; i < Math.floor(sampleRate * duration); i++) {
         const t = i / sampleRate;
@@ -434,7 +429,6 @@
       let freq = 100 + (variant * 15);
       let decay = 8 + (variant * 2);
       
-      // Apply global decay mode
       if (globalDecayMode === 'minimal') {
         duration = Math.min(duration, 0.15);
         decay = decay * 2;
@@ -443,10 +437,7 @@
         decay = decay * 0.5;
       }
       
-      // Apply harmonization (octave above kick)
-      if (harmonized) {
-        freq = 110; // A2 (octave above A1)
-      }
+      if (harmonized) freq = 110;
       
       for (let i = 0; i < Math.floor(sampleRate * duration); i++) {
         const t = i / sampleRate;
@@ -467,28 +458,16 @@
       const buffer = audioContext.createBuffer(1, length, sampleRate);
       const data = buffer.getChannelData(0);
       const decay = 8;
-      
-      // Attack and release times to prevent clicks
-      const attackTime = 0.005; // 5ms fade-in
-      const releaseTime = 0.01; // 10ms fade-out
+      const attackTime = 0.005;
+      const releaseTime = 0.01;
       const attackSamples = Math.floor(sampleRate * attackTime);
       const releaseSamples = Math.floor(sampleRate * releaseTime);
       
       for (let i = 0; i < length; i++) {
         const t = i / sampleRate;
         let env = Math.exp(-t * decay);
-        
-        // Apply fade-in at the start
-        if (i < attackSamples) {
-          env *= i / attackSamples;
-        }
-        
-        // Apply fade-out at the end
-        if (i > length - releaseSamples) {
-          const fadePos = length - i;
-          env *= fadePos / releaseSamples;
-        }
-        
+        if (i < attackSamples) env *= i / attackSamples;
+        if (i > length - releaseSamples) env *= (length - i) / releaseSamples;
         data[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.15;
       }
       return buffer;
@@ -656,9 +635,6 @@
         showFeedback(padId, `${tempo} BPM`);
         restartSequencer();
         render();
-      } else if (padId === 'stepsMinus' || padId === 'stepsPlus') {
-        // Don't adjust steps on tap - only level 1 if not dragging
-        // This prevents accidental step changes when accessing higher levels
       }
     }
 
@@ -702,7 +678,6 @@
             showFeedback(padId, '🔇 OFF');
           } else {
             effects.perDrumEffects[padId] = randomEffect;
-            
             if (randomEffect === 'distortion') {
               effects.perDrumParams[padId] = { drive: 2 + Math.random() * 6 };
               showFeedback(padId, '🎸 DIST');
@@ -739,28 +714,21 @@
         }
       } else if (padId.startsWith('tempo')) {
         if (level === 2) {
-          // Minimal mode
           globalDecayMode = globalDecayMode === 'minimal' ? 'normal' : 'minimal';
           generateAllSamples();
           showFeedback(padId, globalDecayMode === 'minimal' ? '⚡ MINIMAL' : '🔄 NORMAL');
         } else if (level === 3) {
-          // Ambient mode
           globalDecayMode = globalDecayMode === 'ambient' ? 'normal' : 'ambient';
           generateAllSamples();
           showFeedback(padId, globalDecayMode === 'ambient' ? '🌊 AMBIENT' : '🔄 NORMAL');
         } else if (level === 4) {
-          // Harmonize
           harmonized = !harmonized;
           generateAllSamples();
           showFeedback(padId, harmonized ? '🎵 HARMONIZED' : '🔄 UNHARMONIZED');
         } else if (level === 5) {
-          // Global distortion
           const allDistorted = ['kick', 'snare', 'hat', 'tom'].every(d => effects.perDrumEffects[d] === 'distortion');
           if (allDistorted) {
-            ['kick', 'snare', 'hat', 'tom'].forEach(d => {
-              effects.perDrumEffects[d] = null;
-              effects.perDrumParams[d] = {};
-            });
+            ['kick', 'snare', 'hat', 'tom'].forEach(d => { effects.perDrumEffects[d] = null; effects.perDrumParams[d] = {}; });
             showFeedback(padId, '🔇 DIST OFF');
           } else {
             ['kick', 'snare', 'hat', 'tom'].forEach(d => {
@@ -770,34 +738,25 @@
             showFeedback(padId, '🎸 ALL DIST');
           }
         } else if (level === 6) {
-          // Global delay
           const allDelayed = ['kick', 'snare', 'hat', 'tom'].every(d => effects.perDrumEffects[d] === 'delay');
           if (allDelayed) {
-            ['kick', 'snare', 'hat', 'tom'].forEach(d => {
-              effects.perDrumEffects[d] = null;
-              effects.perDrumParams[d] = {};
-            });
+            ['kick', 'snare', 'hat', 'tom'].forEach(d => { effects.perDrumEffects[d] = null; effects.perDrumParams[d] = {}; });
             showFeedback(padId, '🔇 DELAY OFF');
           } else {
             ['kick', 'snare', 'hat', 'tom'].forEach(d => {
               const delayBeats = [0.0625, 0.125, 0.25, 0.5];
               const beatTime = (60 / tempo) * delayBeats[Math.floor(Math.random() * delayBeats.length)];
               effects.perDrumEffects[d] = 'delay';
-              effects.perDrumParams[d] = {
-                delayTime: beatTime,
-                feedback: 0.3 + Math.random() * 0.3,
-                mix: 0.3 + Math.random() * 0.2
-              };
+              effects.perDrumParams[d] = { delayTime: beatTime, feedback: 0.3 + Math.random() * 0.3, mix: 0.3 + Math.random() * 0.2 };
             });
             showFeedback(padId, '〰️ ALL DELAY');
           }
         } else if (level === 7) {
-          // Swing/Humanize - randomize swing amount
           if (swingAmount > 0) {
             swingAmount = 0;
             showFeedback(padId, '🎵 STRAIGHT');
           } else {
-            swingAmount = 0.15 + Math.random() * 0.35; // 15-50% swing
+            swingAmount = 0.15 + Math.random() * 0.35;
             const percent = Math.round(swingAmount * 100);
             showFeedback(padId, `🎷 ${percent}% SWING`);
           }
@@ -811,86 +770,51 @@
           steps = next;
           showFeedback(padId, `${next} STEPS`);
         } else if (level === 3) {
-          // Rotate pattern - shift all hits left or right
           const direction = padId === 'stepsPlus' ? 1 : -1;
-          const rotateAmount = direction;
-          
           ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
             const pattern = patterns[drum].slice(0, steps);
             const rotated = Array(steps).fill(0);
-            
             for (let i = 0; i < steps; i++) {
-              let newPos = (i + rotateAmount + steps) % steps;
+              let newPos = (i + direction + steps) % steps;
               rotated[newPos] = pattern[i];
             }
-            
             patterns[drum] = [...rotated, ...Array(32 - steps).fill(0)];
           });
-          
           showFeedback(padId, direction > 0 ? '🔄 ROTATE →' : '🔄 ROTATE ←');
         } else if (level === 4) {
-          // Reverse all patterns
           ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
             const pattern = patterns[drum].slice(0, steps);
-            const reversed = [...pattern].reverse();
-            patterns[drum] = [...reversed, ...Array(32 - steps).fill(0)];
+            patterns[drum] = [...[...pattern].reverse(), ...Array(32 - steps).fill(0)];
           });
           showFeedback(padId, '⏪ REVERSE');
         } else if (level === 5) {
-          // Sparse mode - remove 40-60% of hits randomly
           const removePercent = 0.4 + Math.random() * 0.2;
-          
           ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
             for (let i = 0; i < steps; i++) {
-              if (patterns[drum][i] === 1 && Math.random() < removePercent) {
-                patterns[drum][i] = 0;
-              }
+              if (patterns[drum][i] === 1 && Math.random() < removePercent) patterns[drum][i] = 0;
             }
           });
-          
-          const percent = Math.round(removePercent * 100);
-          showFeedback(padId, `🌫️ SPARSE ${percent}%`);
+          showFeedback(padId, `🌫️ SPARSE ${Math.round(removePercent * 100)}%`);
         } else if (level === 6) {
-          // Dense mode - add hits to empty slots
           const addPercent = 0.3 + Math.random() * 0.3;
-          
           ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
             for (let i = 0; i < steps; i++) {
-              if (patterns[drum][i] === 0 && Math.random() < addPercent) {
-                patterns[drum][i] = 1;
-              }
+              if (patterns[drum][i] === 0 && Math.random() < addPercent) patterns[drum][i] = 1;
             }
           });
-          
-          const percent = Math.round(addPercent * 100);
-          showFeedback(padId, `🔥 DENSE ${percent}%`);
+          showFeedback(padId, `🔥 DENSE ${Math.round(addPercent * 100)}%`);
         } else if (level === 7) {
-          // Random drum fill/break at the end of the loop
-          const fillLength = Math.min(4, Math.floor(steps / 4)); // Last 4 steps or 25% of pattern
+          const fillLength = Math.min(4, Math.floor(steps / 4));
           const fillStart = steps - fillLength;
-          
-          // Clear the fill section first
           ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
-            for (let i = fillStart; i < steps; i++) {
-              patterns[drum][i] = 0;
-            }
+            for (let i = fillStart; i < steps; i++) patterns[drum][i] = 0;
           });
-          
-          // Add random fill pattern
           for (let i = fillStart; i < steps; i++) {
-            // Kick: sparse (30% chance)
             if (Math.random() < 0.3) patterns.kick[i] = 1;
-            
-            // Snare: moderate (50% chance)
             if (Math.random() < 0.5) patterns.snare[i] = 1;
-            
-            // Hat: dense (70% chance)
             if (Math.random() < 0.7) patterns.hat[i] = 1;
-            
-            // Tom: moderate (40% chance for rolls)
             if (Math.random() < 0.4) patterns.tom[i] = 1;
           }
-          
           showFeedback(padId, '🥁 FILL!');
         }
       }
@@ -898,42 +822,16 @@
 
     function loadRandomPreset() {
       const presets = [
-        // House
         { kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
-        // Techno
         { kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], hat: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0], tom: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
-        // Hip Hop
         { kick: [1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0], tom: [0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0] },
-        // DnB
         { kick: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0], hat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
-        // Breakbeat
         { kick: [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], snare: [0,0,0,0,1,0,0,1,0,0,0,1,1,0,0,0], hat: [1,1,0,1,1,0,1,1,1,0,1,1,0,1,1,0], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0] },
-        // Disco
         { kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
-        // Reggae
         { kick: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], snare: [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0], hat: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
-        // Afrobeat
         { kick: [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0], snare: [0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], hat: [1,0,1,1,0,1,0,1,1,0,1,1,0,1,0,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1] },
-        // Trap
         { kick: [1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0], hat: [1,0,1,1,0,1,1,0,1,0,1,1,0,1,1,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
-        // Jungle
         { kick: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,1,0,0,1,0,1,0,1,0], hat: [1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
-        // Garage
-        { kick: [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0], snare: [0,0,1,0,0,0,0,0,1,0,0,1,0,0,1,0], hat: [1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1] },
-        // Minimal
-        { kick: [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0], snare: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], hat: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0], tom: [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0] },
-        // Electro
-        { kick: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [1,0,1,1,0,1,1,0,1,0,1,1,0,1,1,0], tom: [0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0] },
-        // Tribal
-        { kick: [1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0], snare: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], hat: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], tom: [0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,1] },
-        // Metal
-        { kick: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
-        // Latin
-        { kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], snare: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0], hat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], tom: [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1] },
-        // Samba
-        { kick: [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], snare: [0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0], hat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], tom: [0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1] },
-        // Industrial
-        { kick: [1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0], snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], hat: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1], tom: [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0] }
       ];
       const preset = presets[Math.floor(Math.random() * presets.length)];
       patterns = {
@@ -959,18 +857,14 @@
       const stepTime = (60 / tempo / 4) * 1000;
       sequencerInterval = setInterval(() => {
         currentStep = (currentStep + 1) % steps;
-        
-        // Calculate swing delay for off-beats (odd steps)
         let swingDelay = 0;
         if (swingAmount > 0 && currentStep % 2 === 1) {
-          swingDelay = stepTime * swingAmount * 0.5; // Up to 50% delay on off-beats
+          swingDelay = stepTime * swingAmount * 0.5;
         }
-        
         setTimeout(() => {
           ['kick', 'snare', 'hat', 'tom'].forEach(drum => {
             if (patterns[drum][currentStep] === 1) playSound(drum);
           });
-          
           if (bassEnabled && bassPattern[currentStep] === 1 && bassNotes[currentStep] > 0) {
             const freq = midiToFreq(bassNotes[currentStep]);
             const buffer = generateBass(freq);
@@ -1066,7 +960,6 @@
       mainApp.innerHTML = `
         <div class="container">
           <div class="app-wrapper">
-            <h1>Puzzle Drum Machine</h1>
             <div class="pad-grid">
               ${pads.map(pad => `
                 <div id="pad-${pad.id}" class="pad ${pad.grad} ${currentDragOver === pad.id ? 'drag-over' : ''}">
@@ -1079,9 +972,11 @@
             </div>
             <div class="controls">
               <div class="controls-row">
-                <span class="info-text">BPM: ${tempo}</span>
-                <span class="info-text">Steps: ${steps}</span>
-                <button id="playBtn" class="play-btn ${isPlaying ? 'playing' : ''}">${isPlaying ? '⏸ PAUSE' : '▶ PLAY'}</button>
+                <div class="controls-left">
+                  <span class="info-text">BPM: ${tempo}</span>
+                  <span class="info-text">Steps: ${steps}</span>
+                </div>
+                <button id="playBtn" class="play-btn ${isPlaying ? 'playing' : ''}">${isPlaying ? '🐾 PAWS' : '▶ PLAY'}</button>
               </div>
             </div>
             <div class="hint">Drag between pads to unlock features!</div>
