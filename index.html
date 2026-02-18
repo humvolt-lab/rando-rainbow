@@ -309,11 +309,11 @@
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
         masterCompressor = audioContext.createDynamicsCompressor();
-        masterCompressor.threshold.value = -24;
-        masterCompressor.knee.value = 30;
-        masterCompressor.ratio.value = 12;
-        masterCompressor.attack.value = 0.003;
-        masterCompressor.release.value = 0.25;
+        masterCompressor.threshold.value = -6;
+        masterCompressor.knee.value = 6;
+        masterCompressor.ratio.value = 4;
+        masterCompressor.attack.value = 0.010;
+        masterCompressor.release.value = 0.15;
         masterCompressor.connect(audioContext.destination);
         
         generateAllSamples();
@@ -674,20 +674,22 @@
         
         if (drum === 'kick') {
           buffer = samples.kick[variant];
+          gainNode.gain.value = 1.2;
         } else if (drum === 'snare') {
           buffer = samples.snare[variant];
+          gainNode.gain.value = 0.8;
         } else if (drum === 'hat') {
           const isOpen = Math.random() > 0.7;
           const sampleArray = isOpen ? samples.hatOpen : samples.hatClosed;
           buffer = sampleArray[variant % sampleArray.length];
+          gainNode.gain.value = 0.8;
         } else if (drum === 'tom') {
           buffer = samples.tom[variant];
+          gainNode.gain.value = 0.9;
         }
         
         if (!buffer) return;
-        
         source.buffer = buffer;
-        gainNode.gain.value = 0.8;
         
         const drumEffect = effects?.perDrumEffects?.[drum];
         const params = effects?.perDrumParams?.[drum] || {};
@@ -1123,7 +1125,7 @@
                   <span class="info-text">BPM: ${tempo}</span>
                   <span class="info-text">Steps: ${steps}</span>
                 </div>
-                <button id="playBtn" class="play-btn ${isPlaying ? 'playing' : ''}">${isPlaying ? '🐾 PAWS' : '▶ PLAY'}</button>
+                <button id="playBtn" class="play-btn ${isPlaying ? 'playing' : ''}">${isPlaying ? 'PAWS' : '▶ PLAY'}</button>
               </div>
             </div>
             <div class="hint">Drag between pads to unlock features!</div>
