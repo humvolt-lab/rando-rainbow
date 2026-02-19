@@ -31,29 +31,33 @@
       width: 100vw;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2vh 3vw;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 2vw;
       box-sizing: border-box;
+      gap: 2vw;
     }
 
     .app-wrapper {
-      width: 100%;
+      flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
-      gap: 1.2vh;
+      gap: 2vw;
     }
 
     .pad-grid {
+      flex: 1;
+      min-height: 0;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 1.2vh;
+      grid-template-rows: repeat(4, 1fr);
+      gap: 2vw;
     }
 
     .pad {
-      aspect-ratio: 1 / 1;
-      width: 100%;
-      border-radius: 2.5vw;
+      min-height: 0;
+      border-radius: 4vw;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -74,7 +78,7 @@
     }
 
     .pad.drag-over {
-      box-shadow: 0 0 0 0.5vh white;
+      box-shadow: 0 0 0 3px white;
     }
 
     .drag-line {
@@ -92,18 +96,18 @@
 
     .pad-label {
       font-weight: bold;
-      font-size: 2vh;
-      margin-bottom: 0.5vh;
+      font-size: 3.8vw;
+      margin-bottom: 1vw;
     }
 
     .level-dots {
       display: flex;
-      gap: 0.6vh;
+      gap: 1.2vw;
     }
 
     .dot {
-      width: 0.9vh;
-      height: 0.9vh;
+      width: 1.8vw;
+      height: 1.8vw;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.3);
     }
@@ -125,9 +129,9 @@
     .feedback-text {
       background: rgba(0, 0, 0, 0.8);
       color: white;
-      padding: 0.5vh 1.5vh;
-      border-radius: 1vh;
-      font-size: 1.5vh;
+      padding: 1vw 2.5vw;
+      border-radius: 2vw;
+      font-size: 3vw;
       font-weight: bold;
     }
 
@@ -138,8 +142,9 @@
 
     .controls {
       background: #1f2937;
-      border-radius: 2vh;
-      padding: 1.2vh 2vh;
+      border-radius: 4vw;
+      padding: 2.5vw 4vw;
+      flex-shrink: 0;
     }
 
     .controls-row {
@@ -151,22 +156,22 @@
     .controls-left {
       display: flex;
       flex-direction: column;
-      gap: 0.5vh;
+      gap: 0.8vw;
     }
 
     .info-text {
-      font-size: 2vh;
+      font-size: 3.8vw;
     }
 
     .play-btn {
-      padding: 1vh 3vh;
+      padding: 2vw 5vw;
       background: #10b981;
       color: white;
       border: none;
-      border-radius: 1.2vh;
+      border-radius: 2.5vw;
       font-weight: bold;
       cursor: pointer;
-      font-size: 2.2vh;
+      font-size: 4vw;
     }
 
     .play-btn:active {
@@ -184,7 +189,8 @@
     .hint {
       text-align: center;
       color: #9ca3af;
-      font-size: 1.5vh;
+      font-size: 3vw;
+      flex-shrink: 0;
     }
 
     .start-screen {
