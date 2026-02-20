@@ -327,6 +327,8 @@
     let bassPattern = Array(32).fill(0);
     let bassNotes = Array(32).fill(0);
     
+    let lastAction = '';
+    let lastActionTime = 0;
     let dragStart = null;
     let dragStartPos = null;
     let currentDragOver = null;
@@ -801,11 +803,12 @@
     }
 
     function showAction(text) {
+      lastAction = text;
+      lastActionTime = Date.now();
       const el = document.getElementById('actionReadout');
       if (!el) return;
       el.textContent = text;
       el.classList.remove('flash');
-      // Force reflow to restart animation
       void el.offsetWidth;
       el.classList.add('flash');
     }
@@ -1141,7 +1144,7 @@
             dragStartPos = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
             handlePadTap(pad.id);
             padLevels[pad.id] = 1;
-            render();
+            // Don't call render() here - it would wipe feedback elements
           }
         }, { passive: false });
         
@@ -1230,6 +1233,14 @@
       setupTouchHandlers();
       const playBtn = document.getElementById('playBtn');
       if (playBtn) playBtn.addEventListener('click', togglePlayback);
+      // Restore action readout if it was recently shown (within 2s)
+      if (lastAction && (Date.now() - lastActionTime) < 2000) {
+        const el = document.getElementById('actionReadout');
+        if (el) {
+          el.textContent = lastAction;
+          el.classList.add('flash');
+        }
+      }
     }
 
     document.getElementById('app').innerHTML = `
