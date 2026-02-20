@@ -813,33 +813,20 @@
       el.classList.add('flash');
     }
 
+    function stripEmoji(text) {
+      return text.replace(/[^\u0000-\u007E\u00A0-\u00FF\u0100-\u017F]/g, '').trim();
+    }
+
     function showFeedback(padId, text) {
-      const padEl = document.getElementById(`pad-${padId}`);
-      if (!padEl) return;
-      const feedbackEl = document.createElement('div');
-      feedbackEl.className = 'feedback';
-      feedbackEl.innerHTML = `<div class="feedback-text">${text}</div>`;
-      padEl.appendChild(feedbackEl);
-      setTimeout(() => feedbackEl.remove(), 1500);
-      // Also show in the controls bar readout
-      showAction(text);
+      showAction(stripEmoji(text));
     }
 
     function handlePadTap(padId) {
       if (padId === 'kick' || padId === 'snare' || padId === 'hat' || padId === 'tom') {
         playSound(padId);
         showFeedback(padId, padId.toUpperCase());
-      } else if (padId === 'tempoMinus') {
-        tempo = Math.max(60, tempo - 5);
-        showFeedback(padId, `${tempo} BPM`);
-        restartSequencer();
-        render();
-      } else if (padId === 'tempoPlus') {
-        tempo = Math.min(200, tempo + 5);
-        showFeedback(padId, `${tempo} BPM`);
-        restartSequencer();
-        render();
       }
+      // Tempo/steps taps are handled in touchend so we know no drag occurred
     }
 
     function handleDragComplete(from, to) {
@@ -1189,6 +1176,18 @@
           if (dragStart && currentDragOver && dragStart !== currentDragOver) {
             handleDragComplete(dragStart, currentDragOver);
           } else {
+            // Simple tap with no drag - handle tempo/step pads here
+            if (dragStart && !currentDragOver) {
+              if (dragStart === 'tempoMinus') {
+                tempo = Math.max(60, tempo - 5);
+                showFeedback(dragStart, tempo + ' BPM');
+                restartSequencer();
+              } else if (dragStart === 'tempoPlus') {
+                tempo = Math.min(200, tempo + 5);
+                showFeedback(dragStart, tempo + ' BPM');
+                restartSequencer();
+              }
+            }
             dragTouchCount = 0;
             if (dragStart) padLevels[dragStart] = 1;
           }
