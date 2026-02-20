@@ -38,7 +38,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       padding: var(--pad);
       box-sizing: border-box;
       gap: var(--gap);
@@ -237,32 +237,20 @@
   <div id="app"></div>
 
   <script>
-    // Dynamically calculate button size to fit screen
     function updateLayout() {
       const W = window.innerWidth;
-      // Use a 1px tall div trick to measure actual visible height in Safari
-      const probe = document.createElement('div');
-      probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:100%;pointer-events:none;visibility:hidden;';
-      document.body.appendChild(probe);
-      const H = probe.getBoundingClientRect().height;
-      probe.remove();
-
+      const H = window.innerHeight;
       const gap = Math.round(W * 0.025);
       const pad = Math.round(W * 0.025);
-      // Fixed: controls + hint + 5 gaps + top/bottom pads
-      const controlsH = Math.round(W * 0.16);
-      const hintH     = Math.round(W * 0.06);
-      const totalGaps = gap * 5;
-      const totalPads = pad * 2;
-      const fixed = controlsH + hintH + totalGaps + totalPads;
-      const btnSize = Math.floor((H - fixed) / 4);
+      // Reserve space for controls, hint, gaps, pads
+      // Also subtract 80px as a Safari toolbar safety buffer
+      const reserved = (W * 0.16) + (W * 0.08) + (gap * 5) + (pad * 2) + 80;
+      const btnSize = Math.floor((H - reserved) / 4);
       document.documentElement.style.setProperty('--btn', btnSize + 'px');
       document.documentElement.style.setProperty('--gap', gap + 'px');
       document.documentElement.style.setProperty('--pad', pad + 'px');
     }
     window.addEventListener('resize', updateLayout);
-    // Run after a short delay to let Safari settle its chrome
-    setTimeout(updateLayout, 100);
     updateLayout();
 
     let audioContext = null;
