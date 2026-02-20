@@ -143,6 +143,27 @@
       100% { opacity: 0; }
     }
 
+    .action-readout {
+      flex: 1;
+      text-align: center;
+      font-size: 3.5vw;
+      font-weight: bold;
+      color: white;
+      pointer-events: none;
+      min-width: 0;
+      padding: 0 2vw;
+    }
+
+    .action-readout.flash {
+      animation: actionFade 2s ease-out forwards;
+    }
+
+    @keyframes actionFade {
+      0%   { opacity: 1; }
+      60%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
     .controls {
       background: #1f2937;
       border-radius: 4vw;
@@ -779,6 +800,16 @@
       }
     }
 
+    function showAction(text) {
+      const el = document.getElementById('actionReadout');
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove('flash');
+      // Force reflow to restart animation
+      void el.offsetWidth;
+      el.classList.add('flash');
+    }
+
     function showFeedback(padId, text) {
       const padEl = document.getElementById(`pad-${padId}`);
       if (!padEl) return;
@@ -787,6 +818,8 @@
       feedbackEl.innerHTML = `<div class="feedback-text">${text}</div>`;
       padEl.appendChild(feedbackEl);
       setTimeout(() => feedbackEl.remove(), 1500);
+      // Also show in the controls bar readout
+      showAction(text);
     }
 
     function handlePadTap(padId) {
@@ -1186,6 +1219,7 @@
                   <span class="info-text">BPM: ${tempo}</span>
                   <span class="info-text">Steps: ${steps}</span>
                 </div>
+                <div id="actionReadout" class="action-readout"></div>
                 <button id="playBtn" class="play-btn ${isPlaying ? 'playing' : ''}">${isPlaying ? 'PAWS' : '▶ PLAY'}</button>
               </div>
             </div>
