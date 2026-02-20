@@ -240,18 +240,29 @@
     // Dynamically calculate button size to fit screen
     function updateLayout() {
       const W = window.innerWidth;
-      const H = window.innerHeight;
-      const gap = W * 0.02;
-      const pad = W * 0.02;
-      // Fixed heights: controls (~14% of W) + hint (~5% of W) + 5 gaps + 2 pads
-      const fixed = (W * 0.14) + (W * 0.05) + (gap * 5) + (pad * 2);
-      const available = H - fixed;
-      const btnSize = Math.floor(available / 4);
+      // Use a 1px tall div trick to measure actual visible height in Safari
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:100%;pointer-events:none;visibility:hidden;';
+      document.body.appendChild(probe);
+      const H = probe.getBoundingClientRect().height;
+      probe.remove();
+
+      const gap = Math.round(W * 0.025);
+      const pad = Math.round(W * 0.025);
+      // Fixed: controls + hint + 5 gaps + top/bottom pads
+      const controlsH = Math.round(W * 0.16);
+      const hintH     = Math.round(W * 0.06);
+      const totalGaps = gap * 5;
+      const totalPads = pad * 2;
+      const fixed = controlsH + hintH + totalGaps + totalPads;
+      const btnSize = Math.floor((H - fixed) / 4);
       document.documentElement.style.setProperty('--btn', btnSize + 'px');
       document.documentElement.style.setProperty('--gap', gap + 'px');
       document.documentElement.style.setProperty('--pad', pad + 'px');
     }
     window.addEventListener('resize', updateLayout);
+    // Run after a short delay to let Safari settle its chrome
+    setTimeout(updateLayout, 100);
     updateLayout();
 
     let audioContext = null;
